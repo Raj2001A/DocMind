@@ -234,31 +234,38 @@ def conflict_detector_node(state: AgentState) -> AgentState:
     if len(seen_files) >= 2:
         files = list(seen_files.items())
         llm = _get_llm()
-        for i in range(len(files)):
-            for j in range(i + 1, min(i + 2, len(files))):  # check adjacent pairs
-                name_a, text_a = files[i]
-                name_b, text_b = files[j]
-                prompt = f"""Do these two document excerpts contain contradictory information about the topic "{state['question']}"?
+        
+        # Build a single prompt containing all document excerpts
+        docs_context = ""
+        for idx, (name, text) in enumerate(files):
+            docs_context += f"Document {idx+1} ({name}):\n{text}\n\n"
 
-Document A ({name_a}): {text_a}
+        prompt = f"""You are a technical conflict detector. Read the following document excerpts and determine if they contain contradictory information about the topic "{state['question']}".
 
-Document B ({name_b}): {text_b}
+{docs_context}
 
-Reply with:
-- "NO_CONFLICT" if there is no contradiction
-- "CONFLICT: <one sentence describing the contradiction>" if there is
+If there is NO contradiction between any of these documents, reply with exactly: NO_CONFLICT
+
+If there IS a contradiction, reply with exactly:
+CONFLICT: <doc name 1> vs <doc name 2> - <one sentence describing the contradiction>
 """
-                try:
-                    resp = llm.invoke(prompt)
-                    result = _extract_text(resp.content).strip()
-                    if result.startswith("CONFLICT:"):
-                        conflicts.append({
-                            "doc_a": name_a,
-                            "doc_b": name_b,
-                            "description": result.replace("CONFLICT:", "").strip(),
-                        })
-                except Exception as e:
-                    logger.warning(f"Conflict detection failed: {e}")
+        try:
+            resp = llm.invoke(prompt)
+            result = _extract_text(resp.content).strip()
+            
+            if result.startswith("CONFLICT:"):
+                # E.g. "CONFLICT: api_v1.md vs api_v2.md - The auth endpoint changed from /v1/auth to /v2/auth"
+                parts = result.replace("CONFLICT:", "").split("-", 1)
+                desc = parts[1].strip() if len(parts) > 1 else result
+                doc_names = parts[0].strip() if len(parts) > 1 else "Multiple Docs"
+                
+                conflicts.append({
+                    "doc_a": doc_names,
+                    "doc_b": "Detected Conflict",
+                    "description": desc,
+                })
+        except Exception as e:
+            logger.warning(f"Conflict detection failed: {e}")
 
     return {**state, "conflicts": conflicts}
 
