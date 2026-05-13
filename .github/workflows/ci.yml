@@ -2,52 +2,70 @@ name: DocMind CI/CD
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, master, dev]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   backend-test:
     runs-on: ubuntu-latest
-    name: Backend Tests
+    name: Backend Tests & Lint
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
-      - name: Run linter
-        run: pip install ruff && ruff check backend/
+
+      - name: Run linter (ruff)
+        run: pip install ruff && ruff check backend/ --ignore E501
+
       - name: Run tests
         run: |
           cd backend
-          python -m pytest tests/ -v --tb=short 2>/dev/null || echo "No tests found yet — add tests in backend/tests/"
+          python -m pytest tests/ -v --tb=short
         env:
+          # Placeholder keys — tests use mocks, no real API calls are made
+          LLM_PROVIDER: gemini
+          GEMINI_API_KEY: "AIza-test-placeholder"
+          GEMINI_MODEL: "gemini-flash-latest"
+          GEMINI_EMBEDDING_MODEL: "gemini-embedding-001"
           OPENAI_API_KEY: "sk-test-placeholder"
 
-  frontend-test:
+  frontend-build:
     runs-on: ubuntu-latest
     name: Frontend Build
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install and build
-        run: |
-          cd frontend
-          npm ci
-          npm run build
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Build production bundle
+        run: cd frontend && npm run build
+
+      - name: Verify dist exists
+        run: test -d frontend/dist && echo "Build OK"
 
   docker-build:
     runs-on: ubuntu-latest
-    name: Docker Build Check
-    needs: [backend-test, frontend-test]
-    if: github.ref == 'refs/heads/main'
+    name: Docker Build Verification
+    needs: [backend-test, frontend-build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
+
       - name: Build backend image
-        run: docker build -t docmind-backend ./backend
+        run: docker build -t docmind-backend:${{ github.sha }} ./backend
+
       - name: Build frontend image
-        run: docker build -t docmind-frontend ./frontend
+        run: docker build -t docmind-frontend:${{ github.sha }} ./frontend

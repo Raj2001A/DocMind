@@ -20,18 +20,21 @@ dist/
 .coverage
 htmlcov/
 
-# Env files
+# Env files — NEVER commit .env
 .env
 .env.*
 !.env.example
 
-# Data stores (local, not committed)
+# Data stores (local only — persisted on Render disk in production)
 chroma_db/
 bm25_index.pkl
 uploads/
 *.sqlite
 *.db
+docmind.db
 
 # Misc
 *.log
 .DS_Store
+error.log
+smoke_test.py

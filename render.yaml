@@ -6,27 +6,38 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
+      # ── Provider: switch to "openai" or "ollama" if needed ──────────────────
+      - key: LLM_PROVIDER
+        value: gemini
+      # ── Gemini (default) — set in Render dashboard ────────────────────────
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-flash-latest
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      # ── OpenAI (optional — only needed if LLM_PROVIDER=openai) ────────────
       - key: OPENAI_API_KEY
-        sync: false   # set in Render dashboard
+        sync: false
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: OPENAI_EMBEDDING_MODEL
         value: text-embedding-3-small
-      - key: USE_LOCAL_LLM
-        value: "false"
+      # ── Vector DB ─────────────────────────────────────────────────────────
       - key: CHROMA_PERSIST_DIR
-        value: /tmp/chroma_db   # ephemeral on Render free tier
+        value: /data/chroma_db
+      # ── Ingestion ─────────────────────────────────────────────────────────
       - key: CHUNK_SIZE
         value: "512"
       - key: CHUNK_OVERLAP
         value: "50"
       - key: RETRIEVAL_K
         value: "6"
-    healthCheckPath: /health
     disk:
-      name: chroma-persist
-      mountPath: /tmp/chroma_db
+      name: docmind-data
+      mountPath: /data
       sizeGB: 1
 
   # ── Frontend ─────────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
 [![LangGraph](https://img.shields.io/badge/LangGraph-0.2-orange)](https://langchain-ai.github.io/langgraph/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-1.5%20Flash-blue?logo=googlegemini)](https://ai.google.dev/)
 
 ## 🏗️ Architecture
 
@@ -61,13 +62,14 @@ FastAPI Backend
 ### Prerequisites
 - Python 3.11+
 - Node.js 20+
-- OpenAI API key ([get one](https://platform.openai.com/api-keys))
+- Google Gemini API key (recommended) OR OpenAI API key
 
 ### Backend
 ```bash
 cd backend
 cp .env.example .env
-# Add your OPENAI_API_KEY to .env
+# Add your GEMINI_API_KEY to .env (Default)
+# Or set LLM_PROVIDER=openai and add OPENAI_API_KEY
 
 python -m venv venv
 venv\Scripts\activate         # Windows
