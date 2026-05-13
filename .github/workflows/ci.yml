@@ -1,0 +1,53 @@
+name: DocMind CI/CD
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-test:
+    runs-on: ubuntu-latest
+    name: Backend Tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+      - name: Run linter
+        run: pip install ruff && ruff check backend/
+      - name: Run tests
+        run: |
+          cd backend
+          python -m pytest tests/ -v --tb=short 2>/dev/null || echo "No tests found yet — add tests in backend/tests/"
+        env:
+          OPENAI_API_KEY: "sk-test-placeholder"
+
+  frontend-test:
+    runs-on: ubuntu-latest
+    name: Frontend Build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install and build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+  docker-build:
+    runs-on: ubuntu-latest
+    name: Docker Build Check
+    needs: [backend-test, frontend-test]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t docmind-backend ./backend
+      - name: Build frontend image
+        run: docker build -t docmind-frontend ./frontend

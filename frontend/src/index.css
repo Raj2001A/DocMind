@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Tailwind v4 theme tokens */
+@theme {
+  --color-violet-400: #a78bfa;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #09090b;
+  color: #fff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#root { height: 100vh; display: flex; flex-direction: column; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Line clamp utility */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Markdown content inside assistant messages */
+.prose-docmind h1,
+.prose-docmind h2,
+.prose-docmind h3 {
+  font-weight: 700;
+  color: #f4f4f5;
+  margin-top: 1em;
+  margin-bottom: 0.4em;
+}
+
+.prose-docmind p {
+  margin-bottom: 0.6em;
+  line-height: 1.65;
+  color: #d4d4d8;
+}
+
+.prose-docmind ul, .prose-docmind ol {
+  padding-left: 1.4em;
+  margin-bottom: 0.6em;
+  color: #d4d4d8;
+}
+
+.prose-docmind li { margin-bottom: 0.25em; }
+
+.prose-docmind code {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.85em;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+  color: #c4b5fd;
+}
+
+.prose-docmind pre {
+  background: #0c0c0e;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+
+.prose-docmind pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.82em;
+  color: #e4e4e7;
+}
+
+.prose-docmind strong { color: #f4f4f5; font-weight: 600; }
+.prose-docmind em { color: #a1a1aa; }
+
+.prose-docmind a {
+  color: #a78bfa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-docmind blockquote {
+  border-left: 3px solid rgba(139, 92, 246, 0.5);
+  padding-left: 1em;
+  color: #a1a1aa;
+  font-style: italic;
+  margin: 0.5em 0;
+}
+
+/* Smooth bounce animation for thinking dots */
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+.animate-bounce {
+  animation: bounce-dot 1.4s infinite ease-in-out;
+}

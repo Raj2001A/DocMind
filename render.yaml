@@ -1,0 +1,49 @@
+services:
+  # ── Backend ──────────────────────────────────────────────────────────────────
+  - type: web
+    name: docmind-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false   # set in Render dashboard
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: USE_LOCAL_LLM
+        value: "false"
+      - key: CHROMA_PERSIST_DIR
+        value: /tmp/chroma_db   # ephemeral on Render free tier
+      - key: CHUNK_SIZE
+        value: "512"
+      - key: CHUNK_OVERLAP
+        value: "50"
+      - key: RETRIEVAL_K
+        value: "6"
+    healthCheckPath: /health
+    disk:
+      name: chroma-persist
+      mountPath: /tmp/chroma_db
+      sizeGB: 1
+
+  # ── Frontend ─────────────────────────────────────────────────────────────────
+  - type: web
+    name: docmind-frontend
+    runtime: node
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://docmind-backend.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
