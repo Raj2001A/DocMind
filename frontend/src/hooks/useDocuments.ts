@@ -24,6 +24,15 @@ export function useDocuments() {
     fetchDocuments();
   }, [fetchDocuments]);
 
+  // Polling for processing documents
+  useEffect(() => {
+    const isProcessing = documents.some(d => d.status === 'processing');
+    if (isProcessing) {
+      const interval = setInterval(fetchDocuments, 4000);
+      return () => clearInterval(interval);
+    }
+  }, [documents, fetchDocuments]);
+
   const addDocument = useCallback((docId: string) => {
     setActiveDocIds((prev) => [...prev, docId]);
   }, []);

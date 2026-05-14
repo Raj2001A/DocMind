@@ -38,7 +38,8 @@ def init_db() -> None:
             document_id  TEXT PRIMARY KEY,
             filename     TEXT NOT NULL,
             chunk_count  INTEGER,
-            uploaded_at  TEXT NOT NULL
+            uploaded_at  TEXT NOT NULL,
+            status       TEXT DEFAULT 'ready'
         )
         """)
 
@@ -70,11 +71,19 @@ def get_eval_history(limit: int = 10) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def save_document(document_id: str, filename: str, chunk_count: int) -> None:
+def save_document(document_id: str, filename: str, chunk_count: int, status: str = "ready") -> None:
     with _conn() as conn:
         conn.execute(
-            "INSERT OR REPLACE INTO documents VALUES (?,?,?,?)",
-            (document_id, filename, chunk_count, datetime.utcnow().isoformat()),
+            "INSERT OR REPLACE INTO documents VALUES (?,?,?,?,?)",
+            (document_id, filename, chunk_count, datetime.utcnow().isoformat(), status),
+        )
+
+
+def update_document_chunks_and_status(document_id: str, chunk_count: int, status: str) -> None:
+    with _conn() as conn:
+        conn.execute(
+            "UPDATE documents SET chunk_count = ?, status = ? WHERE document_id = ?",
+            (chunk_count, status, document_id),
         )
 
 

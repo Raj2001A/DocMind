@@ -12,7 +12,8 @@ from pydantic import BaseModel, Field
 class UploadResponse(BaseModel):
     document_id: str
     filename: str
-    chunk_count: int
+    chunk_count: Optional[int] = 0
+    status: str
     message: str
 
 

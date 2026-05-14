@@ -37,6 +37,7 @@ export type Document = {
   filename: string;
   chunk_count: number;
   uploaded_at: string;
+  status: string;
 };
 
 export type EvalScore = {
@@ -54,9 +55,7 @@ export type EvalScore = {
 export const uploadDocument = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await api.post('/api/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  });
+  const res = await api.post('/api/upload', formData);
   return res.data;
 };
 

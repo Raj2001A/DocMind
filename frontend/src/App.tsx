@@ -97,7 +97,7 @@ export default function App() {
         <nav className="px-3 mt-4 space-y-1">
           <button
             onClick={() => clearChat()}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#ececec] hover:bg-[#212121] transition-colors text-left font-medium"
+            className="w-full flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-[#ececec] hover:bg-[#212121] transition-colors text-left font-medium"
           >
             <span className="text-[#ececec]"><IconNewChat /></span>
             New chat
@@ -128,18 +128,34 @@ export default function App() {
             {/* Document list */}
             {documents.map((doc) => {
               const isActive = activeDocIds.includes(doc.document_id);
+              const isProcessing = doc.status === 'processing';
+              const isError = doc.status === 'error';
+
               return (
-                <div key={doc.document_id} className="group relative flex items-center mb-0.5">
+                <div key={doc.document_id} className="group relative flex items-center mb-1.5">
                   <button
-                    onClick={() => toggleDocFilter(doc.document_id)}
-                    className={`flex-1 flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors truncate text-left font-medium ${
-                      isActive
+                    onClick={() => !isProcessing && !isError && toggleDocFilter(doc.document_id)}
+                    disabled={isProcessing || isError}
+                    className={`flex-1 flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm transition-colors truncate text-left font-medium ${
+                      isProcessing
+                        ? 'bg-[#1a1a1a] text-[#555] cursor-wait'
+                        : isError
+                        ? 'bg-[#2a1a1a] text-red-400'
+                        : isActive
                         ? 'bg-[#212121] text-white border-l-2 border-white/25'
                         : 'text-[#d4d4d4] hover:bg-[#212121] border-l-2 border-transparent'
                     }`}
                   >
-                    <span className="shrink-0 text-[#686868]"><IconFolder /></span>
-                    <span className="truncate">{doc.filename}</span>
+                    {isProcessing ? (
+                      <div className="w-4 h-4 border-2 border-[#555]/40 border-t-[#8e8e8e] rounded-full animate-spin shrink-0" />
+                    ) : (
+                      <span className={`shrink-0 ${isError ? 'text-red-900' : 'text-[#686868]'}`}><IconFolder /></span>
+                    )}
+                    <span className="truncate">
+                      {doc.filename}
+                      {isProcessing && <span className="ml-2 text-[10px] text-[#555] uppercase tracking-wider font-bold">Processing...</span>}
+                      {isError && <span className="ml-2 text-[10px] text-red-500 uppercase tracking-wider font-bold">Failed</span>}
+                    </span>
                   </button>
                   <button
                     onClick={(e) => {

@@ -163,13 +163,13 @@ def _get_vectorstore() -> Chroma:
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
-def ingest_document(file_path: Path, filename: str) -> dict:
+def ingest_document(file_path: Path, filename: str, existing_doc_id: Optional[str] = None) -> dict:
     """
     Full ingestion pipeline. Returns metadata dict including chunk_count.
     """
     _load_bm25()
 
-    document_id = hashlib.md5(filename.encode()).hexdigest()[:12] + str(uuid.uuid4())[:8]
+    document_id = existing_doc_id or (hashlib.md5(filename.encode()).hexdigest()[:12] + str(uuid.uuid4())[:8])
 
     # 1. Extract
     suffix = file_path.suffix.lower()
