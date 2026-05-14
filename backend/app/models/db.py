@@ -82,3 +82,9 @@ def get_documents() -> list[dict]:
     with _conn() as conn:
         rows = conn.execute("SELECT * FROM documents ORDER BY uploaded_at DESC").fetchall()
     return [dict(r) for r in rows]
+
+
+def delete_document(document_id: str) -> bool:
+    with _conn() as conn:
+        cursor = conn.execute("DELETE FROM documents WHERE document_id = ?", (document_id,))
+        return cursor.rowcount > 0

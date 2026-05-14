@@ -46,6 +46,9 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
     # Run ingestion pipeline
     try:
         result = ingest_document(upload_path, safe_name)
+    except ValueError as e:
+        upload_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         upload_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
@@ -62,3 +65,24 @@ async def upload_document(file: UploadFile = File(...)) -> UploadResponse:
 async def list_documents():
     from app.models.db import get_documents
     return {"documents": get_documents()}
+
+
+@router.delete("/documents/{document_id}")
+async def delete_document(document_id: str):
+    from app.models.db import delete_document as db_delete
+
+    # Remove from ChromaDB vector store
+    try:
+        from app.services.ingestion import get_vectorstore
+        vs = get_vectorstore()
+        # Get all chunk IDs for this document
+        results = vs.get(where={"document_id": document_id})
+        if results and results.get("ids"):
+            vs.delete(ids=results["ids"])
+    except Exception as e:
+        pass  # ChromaDB cleanup is best-effort
+
+    deleted = db_delete(document_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    return {"message": "Document deleted.", "document_id": document_id}

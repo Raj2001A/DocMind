@@ -53,7 +53,7 @@ def _get_embeddings():
     Mirrors the LLM factory pattern in agents/graph.py — same env var controls both.
     """
     provider = settings.llm_provider.lower()
-    if provider == "gemini":
+    if provider == "gemini" or provider == "groq":
         from langchain_google_genai import GoogleGenerativeAIEmbeddings
         return GoogleGenerativeAIEmbeddings(
             model=settings.gemini_embedding_model,
@@ -185,6 +185,9 @@ def ingest_document(file_path: Path, filename: str) -> dict:
     # 2. Chunk
     chunks = _chunk_pages(pages, filename, document_id)
     logger.info(f"Created {len(chunks)} chunks")
+
+    if not chunks:
+        raise ValueError("No text could be extracted from the document. Please ensure it is not an image-based PDF or empty.")
 
     # 3. Store in ChromaDB (uses singleton — no reconnect cost)
     vectorstore = get_vectorstore()

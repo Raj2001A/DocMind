@@ -55,7 +55,7 @@ export const uploadDocument = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
   const res = await api.post('/api/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: { 'Content-Type': 'multipart/form-data' }
   });
   return res.data;
 };
@@ -85,5 +85,10 @@ export const getEvalResults = async () => {
 
 export const triggerEval = async () => {
   const res = await api.post('/api/eval/run');
+  return res.data;
+};
+
+export const deleteDocument = async (documentId: string) => {
+  const res = await api.delete(`/api/documents/${documentId}`);
   return res.data;
 };

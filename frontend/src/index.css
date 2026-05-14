@@ -1,17 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* Tailwind v4 theme tokens */
 @theme {
   --color-violet-400: #a78bfa;
   --color-violet-500: #8b5cf6;
   --color-violet-600: #7c3aed;
-  --color-brand-100: #e0e7ff;
-  --color-brand-500: #6366f1;
-  --color-brand-900: #312e81;
-  --color-surface-50: #fafafa;
-  --color-surface-900: #18181b;
-  --color-surface-950: #09090b;
+  --color-brand-100: #ececec;
+  --color-brand-500: #ececec;
+  --color-brand-900: #ececec;
+  --color-surface-50: #f9f9f9;
+  --color-surface-900: #0d0d0d;
+  --color-surface-950: #000000;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
@@ -19,8 +18,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: #09090b;
-  color: #fff;
+  background: #000000;
+  color: #ececec;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
@@ -29,174 +28,112 @@ body {
 
 #root { height: 100vh; display: flex; flex-direction: column; }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
+/* Scrollbar — ChatGPT style */
+::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-/* Line clamp utility */
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Markdown content inside assistant messages */
+/* ── Markdown Prose ──────────────────────────────────────────────────── */
 .prose-docmind {
-  font-size: 0.95rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #d1d5db;
 }
 
-.prose-docmind h1,
-.prose-docmind h2,
-.prose-docmind h3 {
+.prose-docmind h1, .prose-docmind h2, .prose-docmind h3 {
   font-weight: 600;
-  color: #fff;
-  margin-top: 1.5em;
-  margin-bottom: 0.75em;
-  letter-spacing: -0.02em;
+  color: #ececec;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
-
-.prose-docmind h1 { font-size: 1.5em; }
-.prose-docmind h2 { font-size: 1.25em; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3em; }
-.prose-docmind h3 { font-size: 1.1em; }
+.prose-docmind h1 { font-size: 1.875rem; text-transform: uppercase; font-weight: bold; }
+.prose-docmind h2 { font-size: 1.5rem; }
+.prose-docmind h3 { font-size: 1.25rem; }
 
 .prose-docmind p {
-  margin-bottom: 1em;
-  line-height: 1.7;
-  color: #a1a1aa;
-}
-
-.prose-docmind ul, .prose-docmind ol {
-  padding-left: 1.5em;
-  margin-bottom: 1em;
-  color: #a1a1aa;
-}
-
-.prose-docmind li { 
-  margin-bottom: 0.5em; 
-  line-height: 1.6;
-}
-
-.prose-docmind li::marker {
-  color: #6366f1;
+  margin-bottom: 1.25rem;
+  line-height: 1.75;
 }
 
 .prose-docmind code {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  padding: 0.2em 0.4em;
-  font-size: 0.85em;
+  background: #2f2f2f;
+  border-radius: 6px;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.875rem;
   font-family: var(--font-mono);
-  color: #e0e7ff;
+  color: #fff;
 }
 
 .prose-docmind pre {
-  background: #000;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  padding: 1.25em;
+  background: #212121;
+  border-radius: 12px;
+  padding: 1.25rem;
   overflow-x: auto;
-  margin: 1.25em 0;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+  margin: 1.5rem 0;
+  position: relative;
 }
+
+/* Simulate the copy button in code block */
+.prose-docmind pre::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 16px;
+  height: 16px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="%238e8e8e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.prose-docmind pre:hover::before { opacity: 1; }
 
 .prose-docmind pre code {
   background: none;
   border: none;
   padding: 0;
-  font-size: 0.85em;
-  color: #e4e4e7;
-  line-height: 1.6;
+  font-size: 0.875rem;
 }
 
-.prose-docmind strong { color: #fff; font-weight: 600; }
-.prose-docmind em { color: #a1a1aa; font-style: italic; }
+/* ── Custom ChatGPT Components ─────────────────────────────────────────── */
 
-.prose-docmind a {
-  color: #818cf8;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(129, 140, 248, 0.3);
-  transition: all 0.2s ease;
+.gpt-input-container {
+  background-color: #2f2f2f;
+  border-radius: 26px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease-in-out;
 }
 
-.prose-docmind a:hover {
-  border-bottom-color: #818cf8;
-  color: #a5b4fc;
+/* Animations */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.prose-docmind blockquote {
-  border-left: 3px solid #6366f1;
-  padding-left: 1.25em;
-  color: #a1a1aa;
-  font-style: italic;
-  margin: 1.25em 0;
-  background: linear-gradient(to right, rgba(99, 102, 241, 0.05), transparent);
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
-  border-radius: 0 4px 4px 0;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.prose-docmind table {
-  width: 100%;
-  margin-bottom: 1.25em;
-  border-collapse: collapse;
+.animate-in {
+  animation: fadeInUp 0.4s ease-out forwards;
 }
 
-.prose-docmind th, .prose-docmind td {
-  padding: 0.75em;
-  border: 1px solid rgba(255,255,255,0.1);
-  text-align: left;
+.slide-in-from-bottom-2 {
+  animation-duration: 0.3s;
 }
 
-.prose-docmind th {
-  background: rgba(255,255,255,0.02);
-  color: #fff;
-  font-weight: 600;
-}
-
-/* Custom UI Utilities */
-.glass-panel {
-  background: rgba(24, 24, 27, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-}
-
-.glass-button {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-.glass-button:active {
-  transform: translateY(0);
-}
-
-/* Smooth bounce animation for thinking dots */
-@keyframes bounce-dot {
-  0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
-  40% { transform: translateY(-4px); opacity: 1; }
-}
-
-.animate-bounce-dot {
-  animation: bounce-dot 1.4s infinite cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Subtle pulse for active elements */
-@keyframes soft-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-.animate-soft-pulse {
-  animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.slide-in-from-bottom-4 {
+  animation-duration: 0.5s;
 }

@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../hooks/useChat';
-import { SourcePanel } from './SourcePanel';
 import { ConflictAlert } from './ConflictAlert';
 
 interface Props {
@@ -21,6 +20,14 @@ export const ChatInterface: React.FC<Props> = ({ messages, isLoading, currentSta
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 200) + 'px';
+    }
+  }, [input]);
+
   const handleSend = () => {
     const q = input.trim();
     if (!q || isLoading) return;
@@ -36,133 +43,184 @@ export const ChatInterface: React.FC<Props> = ({ messages, isLoading, currentSta
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-zinc-800 scrollbar-track-transparent">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-brand-500/20 blur-[60px] rounded-full group-hover:opacity-60 transition-opacity duration-1000 animate-soft-pulse" />
-              <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center bg-zinc-950/50 backdrop-blur-xl relative z-10 shadow-2xl overflow-hidden">
-                 <div className="absolute inset-0 bg-gradient-to-tr from-brand-500/20 to-transparent" />
-                 <svg className="w-6 h-6 text-brand-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                 </svg>
-              </div>
-            </div>
-            <div className="space-y-3 max-w-md">
-              <h2 className="text-zinc-100 font-medium text-xl tracking-wide">DocMind Intelligence</h2>
-              <p className="text-zinc-500 text-sm leading-relaxed">
-                Connect your documentation stack and query it using a LangGraph-orchestrated reasoning agent.
-              </p>
+    <div className="flex flex-col h-full bg-transparent relative">
+      {/* Messages area */}
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+        {messages.length === 0 ? (
+          /* ── Empty state ─────────────────────────────────────── */
+          <div className="flex flex-col items-center justify-center h-full pb-20 animate-in fade-in duration-500 slide-in-from-bottom-4">
+            <h1 className="text-3xl font-bold text-[#ececec] mb-8 tracking-tight">What can I help with?</h1>
+            
+            {/* Starter chips */}
+            <div className="grid grid-cols-2 gap-3 w-full max-w-2xl px-5 mt-4">
+              {[
+                { title: 'Summarize a document', icon: '📝' },
+                { title: 'Find contradictions', icon: '⚖️' },
+                { title: 'Extract key terms', icon: '🔍' },
+                { title: 'Explain core concepts', icon: '💡' }
+              ].map((chip) => (
+                <button
+                  key={chip.title}
+                  onClick={() => onSend(chip.title)}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-[#2f2f2f]/50 hover:bg-[#2f2f2f] transition-all text-left group hover:border-white/20 hover:-translate-y-0.5"
+                >
+                  <span className="text-xl group-hover:scale-110 transition-transform">{chip.icon}</span>
+                  <span className="text-sm font-medium text-[#ececec]">{chip.title}</span>
+                </button>
+              ))}
             </div>
           </div>
-        )}
-
-        {messages.map((msg, idx) => (
-          <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-500`} style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
-            <div className={`max-w-[85%] sm:max-w-[75%] ${msg.role === 'user' ? 'order-1' : 'order-2'}`}>
-              {/* Conflict alert above assistant message */}
-              {msg.role === 'assistant' && msg.response?.conflicts && msg.response.conflicts.length > 0 && (
-                <ConflictAlert conflicts={msg.response.conflicts} />
-              )}
-
-              <div
-                className={`
-                  relative px-6 py-5 text-[15px] leading-relaxed shadow-sm transition-all duration-300
-                  ${msg.role === 'user'
-                    ? 'bg-zinc-800/40 text-zinc-100 rounded-2xl rounded-tr-sm border border-white/5 whitespace-pre-wrap ml-auto'
-                    : 'glass-panel text-zinc-200 rounded-2xl rounded-tl-sm border-l-2 border-l-brand-500'
-                  }
-                `}
-              >
+        ) : (
+          /* ── Message list ────────────────────────────────────── */
+          <div className="max-w-[48rem] mx-auto px-5 py-8 w-full pb-10">
+            {messages.map((msg) => (
+              <div key={msg.id} className="mb-10 animate-in fade-in duration-300 slide-in-from-bottom-2">
                 {msg.role === 'user' ? (
-                  msg.content
-                ) : (
-                  <div className="prose-docmind">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <div className="flex justify-end mb-4">
+                    <div className="bg-[#2f2f2f] text-[#ececec] rounded-3xl px-5 py-3 max-w-[85%] text-[16px] leading-relaxed whitespace-pre-wrap font-sans">
                       {msg.content}
-                    </ReactMarkdown>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-4 items-start w-full">
+                    {/* DocMind Avatar */}
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 overflow-hidden bg-white shadow-sm">
+                      <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="white" />
+                        <path d="M8 10h10a6 6 0 0 1 0 12H8V10z" fill="black" />
+                        <circle cx="22" cy="16" r="2" fill="white" />
+                      </svg>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 pt-1 text-[#ececec]">
+                      {msg.response?.conflicts && msg.response.conflicts.length > 0 && (
+                        <div className="mb-6">
+                          <ConflictAlert conflicts={msg.response.conflicts} />
+                        </div>
+                      )}
+
+                      <div className="prose-docmind font-sans">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+
+                      {msg.response?.sources && msg.response.sources.length > 0 && (
+                        <div className="mt-4 flex items-center gap-2">
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#2f2f2f] hover:bg-[#212121] cursor-pointer transition-colors text-xs text-[#b4b4b4] font-medium">
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+                            </svg>
+                            Sources
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action row (Copy, Regenerate, Thumbs down) */}
+                      <div className="flex items-center gap-2 mt-4">
+                        <button className="p-1.5 hover:bg-[#2f2f2f] hover:text-[#ececec] rounded-md text-[#8e8e8e] transition-colors hover:scale-[1.05] active:scale-[0.95]">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                          </svg>
+                        </button>
+                        <button className="p-1.5 hover:bg-[#2f2f2f] hover:text-[#ececec] rounded-md text-[#8e8e8e] transition-colors hover:scale-[1.05] active:scale-[0.95]">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                          </svg>
+                        </button>
+                        <button className="p-1.5 hover:bg-[#2f2f2f] hover:text-[#ececec] rounded-md text-[#8e8e8e] transition-colors hover:scale-[1.05] active:scale-[0.95]">
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+            ))}
 
-              {/* Source panel below assistant message */}
-              {msg.role === 'assistant' && msg.response?.sources && msg.response.sources.length > 0 && (
-                <div className="mt-3">
-                  <SourcePanel
-                    sources={msg.response.sources}
-                    confidence={msg.response.confidence}
-                    queryType={msg.response.query_type}
-                  />
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex gap-4 items-start w-full animate-in fade-in duration-300">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 overflow-hidden bg-white shadow-sm">
+                  <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="white" />
+                    <path d="M8 10h10a6 6 0 0 1 0 12H8V10z" fill="black" />
+                    <circle cx="22" cy="16" r="2" fill="white" />
+                  </svg>
                 </div>
-              )}
-
-              <div className={`flex items-center gap-2 mt-2 px-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {msg.role === 'assistant' && (
-                  <span className="text-brand-400 text-[10px] uppercase font-bold tracking-wider">DocMind Agent</span>
-                )}
-                {msg.role === 'assistant' && (
-                  <span className="w-1 h-1 rounded-full bg-zinc-700" />
-                )}
-                <span className="text-zinc-600 text-[11px] font-mono tracking-wide">
-                  {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                <div className="flex-1 pt-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 bg-[#ececec] rounded-full animate-pulse-dot" style={{ animationDelay: '0s' }} />
+                    <div className="w-2 h-2 bg-[#ececec] rounded-full animate-pulse-dot" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-2 h-2 bg-[#ececec] rounded-full animate-pulse-dot" style={{ animationDelay: '0.4s' }} />
+                  </div>
+                  {currentStage && (
+                    <span className="block mt-2 text-[11px] font-medium text-[#8e8e8e]">{currentStage}</span>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
+            )}
 
-        {isLoading && (
-          <div className="flex justify-start animate-in fade-in duration-300">
-            <div className="glass-panel border-l-2 border-l-brand-400 rounded-2xl rounded-tl-sm px-5 py-4 flex items-center gap-4">
-              <div className="flex gap-1.5">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-bounce-dot"
-                    style={{ animationDelay: `${i * 0.15}s` }}
-                  />
-                ))}
-              </div>
-              <span className="text-zinc-400 text-xs font-mono tracking-wide uppercase">{currentStage || 'Reasoning'}</span>
-            </div>
+            <div ref={bottomRef} />
           </div>
         )}
-
-        <div ref={bottomRef} className="h-4" />
       </div>
 
-      {/* Input */}
-      <div className="p-4 sm:p-6 bg-gradient-to-t from-[#09090b] via-[#09090b]/90 to-transparent relative z-20">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex gap-3 items-end glass-panel rounded-2xl p-2 focus-within:border-brand-500/50 focus-within:ring-1 focus-within:ring-brand-500/20 transition-all duration-300">
+      {/* ── Input area ──────────────────────────────────────────── */}
+      <div className="w-full pt-2 pb-4 px-5 shrink-0 bg-gradient-to-t from-[#212121] via-[#212121] to-transparent">
+        <div className="max-w-[48rem] mx-auto w-full">
+          <div className="bg-[#2f2f2f] rounded-[26px] p-2 flex items-end gap-1 group focus-within:ring-1 focus-within:ring-white/10 shadow-[0_0_15px_rgba(0,0,0,0.1)]">
+            {/* Attachment Button */}
+            <button className="p-2.5 rounded-full hover:bg-[#424242] transition-colors shrink-0 mb-0.5 ml-1 text-[#ececec]">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder="Ask DocMind..."
+              placeholder="Ask anything"
               rows={1}
-              className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-600 text-sm leading-relaxed resize-none outline-none px-4 py-3 max-h-40 scrollbar-thin scrollbar-thumb-zinc-700/50"
-              style={{ minHeight: '44px' }}
+              className="flex-1 bg-transparent text-[#ececec] placeholder-[#b4b4b4] text-[16px] resize-none outline-none leading-relaxed max-h-[200px] py-2 px-1"
+              style={{ minHeight: '24px' }}
             />
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-              className="shrink-0 w-10 h-10 bg-white hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 text-black disabled:cursor-not-allowed rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 mb-1 mr-1"
-            >
-              <svg className="w-5 h-5 translate-x-[1px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+
+            {/* Voice Button */}
+            <button className="p-2.5 rounded-full hover:bg-[#424242] transition-colors shrink-0 mb-0.5 text-[#ececec]">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
               </svg>
             </button>
+
+            {input.trim() ? (
+              <button
+                onClick={handleSend}
+                disabled={isLoading}
+                className="shrink-0 w-8 h-8 bg-[#ececec] hover:bg-white disabled:opacity-50 text-black rounded-full flex items-center justify-center transition-all mb-1.5 mr-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 19V5M5 12l7-7 7 7" />
+                </svg>
+              </button>
+            ) : (
+              <button className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mb-1.5 mr-2 hover:bg-[#424242] transition-colors">
+                 <svg className="w-5 h-5 text-[#ececec]" viewBox="0 0 24 24" fill="currentColor">
+                   <path d="M8 5v14l11-7z" />
+                 </svg>
+              </button>
+            )}
           </div>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <p className="text-zinc-600 text-[10px] font-mono tracking-widest uppercase flex items-center gap-2">
-              <span className="w-1 h-1 rounded-full bg-brand-500"></span>
-              Powered by LangGraph Agentic Pipeline
-            </p>
-          </div>
+          <p className="text-center text-xs text-[#8e8e8e] mt-3 pb-1 font-medium">
+            DocMind can make mistakes. Verify with source citations.
+          </p>
         </div>
       </div>
     </div>

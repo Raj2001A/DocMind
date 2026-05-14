@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     gemini_model: str = "gemini-2.0-flash"
     gemini_embedding_model: str = "models/text-embedding-004"
 
+    # --- Groq (Free / Fast Llama models) --------------------------------------
+    groq_api_key: str = ""
+    groq_model: str = "llama-3.3-70b-versatile"
+
     # --- Ollama (local LLM fallback) ------------------------------------------
     use_local_llm: bool = False          # legacy flag — prefer llm_provider
     ollama_model: str = "llama3"
@@ -49,7 +53,14 @@ class Settings(BaseSettings):
 
     # --- App ------------------------------------------------------------------
     app_title: str = "DocMind"
-    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    # In production, set CORS_ORIGINS env var as a comma-separated list:
+    # e.g.  CORS_ORIGINS=https://docmind.onrender.com,https://www.docmind.app
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:3000",
+    ]
     upload_dir: str = "./uploads"
 
 

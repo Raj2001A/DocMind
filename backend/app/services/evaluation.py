@@ -33,7 +33,6 @@ def run_ragas_evaluation(
         context_precision,
     )
     from datasets import Dataset
-    from langchain_openai import ChatOpenAI, OpenAIEmbeddings
     from app.agents.graph import run_agent
     from app.config import settings
 
@@ -41,13 +40,14 @@ def run_ragas_evaluation(
         test_questions = [
             "What is the main purpose of this documentation?",
             "How do I get started with installation?",
-            "What are the key configuration options?",
         ]
 
     data = {"question": [], "answer": [], "contexts": [], "ground_truth": []}
 
-    for question in test_questions:
+    # Reduce questions to 2 to speed up evaluation during dev/demo
+    for question in test_questions[:2]:
         try:
+            logger.info(f"Eval: Running pipeline for question: {question}")
             state = run_agent(question=question)
             contexts = [doc.get("quote", "") for doc in state.get("sources", [])]
             data["question"].append(question)
@@ -62,15 +62,45 @@ def run_ragas_evaluation(
 
     dataset = Dataset.from_dict(data)
 
-    llm = ChatOpenAI(
-        model=settings.openai_model,
-        openai_api_key=settings.openai_api_key,
-    )
-    embeddings = OpenAIEmbeddings(
-        model=settings.openai_embedding_model,
-        openai_api_key=settings.openai_api_key,
-    )
+    # Initialize LLM and Embeddings based on provider
+    if settings.llm_provider == "openai":
+        from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+        llm = ChatOpenAI(
+            model=settings.openai_model,
+            openai_api_key=settings.openai_api_key,
+        )
+        embeddings = OpenAIEmbeddings(
+            model=settings.openai_embedding_model,
+            openai_api_key=settings.openai_api_key,
+        )
+    elif settings.llm_provider == "gemini":
+        from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+        llm = ChatGoogleGenerativeAI(
+            model=settings.gemini_model,
+            google_api_key=settings.gemini_api_key,
+        )
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model=settings.gemini_embedding_model,
+            google_api_key=settings.gemini_api_key,
+        )
+    elif settings.llm_provider == "groq":
+        from langchain_groq import ChatGroq
+        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+        llm = ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
+        )
+        embeddings = GoogleGenerativeAIEmbeddings(
+            model=settings.gemini_embedding_model,
+            google_api_key=settings.gemini_api_key,
+        )
+    else:
+        # Fallback to OpenAI if provider unknown
+        from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+        llm = ChatOpenAI(model="gpt-4o-mini")
+        embeddings = OpenAIEmbeddings()
 
+    logger.info("Starting RAGAS evaluation...")
     result = evaluate(
         dataset,
         metrics=[answer_relevancy, faithfulness, context_precision],

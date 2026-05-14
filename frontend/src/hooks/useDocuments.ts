@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { getDocuments } from '../lib/api';
+import { getDocuments, deleteDocument as apiDeleteDocument } from '../lib/api';
 import type { Document } from '../lib/api';
 
 
@@ -34,6 +34,16 @@ export function useDocuments() {
     );
   }, []);
 
+  const removeDocument = useCallback(async (docId: string) => {
+    try {
+      await apiDeleteDocument(docId);
+      setDocuments((prev) => prev.filter((d) => d.document_id !== docId));
+      setActiveDocIds((prev) => prev.filter((id) => id !== docId));
+    } catch (err) {
+      console.error('Failed to delete document:', err);
+    }
+  }, []);
+
   return {
     documents,
     activeDocIds,
@@ -41,5 +51,6 @@ export function useDocuments() {
     fetchDocuments,
     addDocument,
     toggleDocFilter,
+    removeDocument,
   };
 }

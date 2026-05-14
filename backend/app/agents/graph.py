@@ -78,6 +78,15 @@ def _get_llm(temperature: float = 0.0):
             google_api_key=settings.gemini_api_key,
             temperature=temperature,
             convert_system_message_to_human=True,  # Gemini requirement
+            max_retries=0,
+        )
+    elif provider == "groq":
+        from langchain_groq import ChatGroq
+        return ChatGroq(
+            model=settings.groq_model,
+            api_key=settings.groq_api_key,
+            temperature=temperature,
+            max_retries=0,
         )
     elif provider == "ollama" or settings.use_local_llm:
         from langchain_community.llms import Ollama
@@ -88,6 +97,7 @@ def _get_llm(temperature: float = 0.0):
             model=settings.openai_model,
             openai_api_key=settings.openai_api_key,
             temperature=temperature,
+            max_retries=0,
         )
 
 
