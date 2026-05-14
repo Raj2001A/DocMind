@@ -1,39 +1,27 @@
 services:
-  # ── Backend ──────────────────────────────────────────────────────────────────
+  # ── Backend (Docker) ────────────────────────────────────────────────────────
+  # Docker is REQUIRED here for system-level PDF libraries (libgl1)
   - type: web
     name: docmind-backend
-    runtime: python
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    runtime: docker
+    dockerContext: backend
+    dockerfilePath: Dockerfile
     healthCheckPath: /health
     envVars:
-      # ── Provider: default to gemini ──────────────────────────────────────────
       - key: LLM_PROVIDER
         value: gemini
-      # ── Gemini (default) — set API key in Render dashboard ───────────────────
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
         value: gemini-2.0-flash
       - key: GEMINI_EMBEDDING_MODEL
         value: gemini-embedding-001
-      # ── OpenAI (optional) ────────────────────────────────────────────────────
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: OPENAI_MODEL
-        value: gpt-4o-mini
-      - key: OPENAI_EMBEDDING_MODEL
-        value: text-embedding-3-small
-      # ── Vector DB & Storage (persistent disk) ─────────────────────────────
       - key: CHROMA_PERSIST_DIR
         value: /data/chroma_db
       - key: UPLOAD_DIR
         value: /data/uploads
-      # ── CORS ───────────────────────────────────────────────────────────────
       - key: CORS_ORIGINS
         value: '["https://docmind-frontend.onrender.com"]'
-      # ── Ingestion ──────────────────────────────────────────────────────────
       - key: CHUNK_SIZE
         value: "512"
       - key: CHUNK_OVERLAP
@@ -45,14 +33,12 @@ services:
       mountPath: /data
       sizeGB: 1
 
-  # ── Frontend ─────────────────────────────────────────────────────────────────
-  - type: web
+  # ── Frontend (Static Site) ──────────────────────────────────────────────────
+  # Using 'static' type is free on Render and handles SPAs perfectly
+  - type: static
     name: docmind-frontend
-    runtime: node
-    nodeVersion: "20"
-    rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    publishPath: dist
     headers:
       - path: /assets/*
         name: Cache-Control
