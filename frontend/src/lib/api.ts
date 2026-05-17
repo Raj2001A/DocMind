@@ -55,7 +55,11 @@ export type EvalScore = {
 export const uploadDocument = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await api.post('/api/upload', formData);
+  const res = await api.post('/api/upload', formData, {
+    headers: {
+      'Content-Type': undefined
+    }
+  });
   return res.data;
 };
 
